@@ -1,6 +1,6 @@
 const express = require('express');
-const connectDB = require('./config/database');
-const apiRoutes = require('./routes/api');
+const connectDB = require('./src/config/database');
+const apiRoutes = require('./src/routes/api');
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
 

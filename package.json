@@ -2,9 +2,9 @@
   "name": "resume-scorer",
   "version": "1.0.0",
   "description": "Node.js project with Mongoose setup in src folder",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon src/index.js env",
+    "start": "nodemon index.js env",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
