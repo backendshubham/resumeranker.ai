@@ -1,0 +1,24 @@
+{
+  "name": "resume-scorer",
+  "version": "1.0.0",
+  "description": "Node.js project with Mongoose setup in src folder",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js env",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.16.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-fileupload": "^1.5.1",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.8.0",
+    "mongoose": "^8.5.1",
+    "nodemon": "^3.1.4",
+    "pdf-parse": "^1.1.1"
+  }
+}
