@@ -5,72 +5,124 @@ const genAi = new GoogleGenerativeAI('AIzaSyDQPPbzypDQeJHoomkFaFhbO9kEoKLw_nk')
 const fs = require('fs')
 const { fileToJson } = require('../lib/fileUploadLib'); // Import the library
 
-const modal = genAi.getGenerativeModel({
-    model: "gemini-1.5-flash-001"
-});
+const generativeConfig = {
+    model: "gemini-1.5-flash-001",
+    temperature: 0.6,
+    topP: 0.9,
+    frequencyPenalty: 0.5,
+    presencePenalty: 0.5,
+};
+const modal = genAi.getGenerativeModel(generativeConfig); 
+
 
 /**
- * This function has been made for fetching JSON format of a resume
+ * This function has been made for fetching JSON format of multiple resumes with a limit
  * @param {*} req 
  * @returns 
  */
 const resumeRanker = async (req) => {
     try {
-
-        const pdfReader = req.files,
-         jd = req.body.jd;
-
-        let candidatePossition = req.body.candidatePossition, 
-         finder = req.body.finder
-
-        if(candidatePossition){
-           candidatePossition = `Candidate Possition: ${candidatePossition}`
-        }
-
-        if(finder){
-            finder = `Who is finding cantidate: ${finder}`
-         }
-
-        let jsonData = await fileToJson(pdfReader.resume.data, pdfReader.resume.mimetype),
-            resumeText = jsonData.text
-
-        let inputText = ""
-
-        if (req.body.actionType == "submit_score") {
-            inputText = `Analyze the provided resume based on the STAR framework: Situation, Task, Action, and Result. Score each section and provide an overall score. Highlight strengths and suggest areas for improvement based on how well the resume follows the STAR method.`
-        } else if (req.body.actionType == "submit_gather") {
-            inputText = `The resume provided is missing details related to the STAR framework. Ask the candidate targeted questions to gather information about specific situations, tasks, actions, and results in their past roles.`
-        } else if (req.body.actionType == "submit_feedback") {
-            inputText = `After collecting additional STAR details, re-score the resume. Provide a detailed report showing the initial score, suggested improvements, and the final score, guiding the candidate on how to present their resume more effectively.`
-        }
-
-        const note = `Note: Return the final response in html tags. All the score should be always be out of 10.`
-
-        const temperature = 0.3;
-
-        const response = await modal.generateContent(`resume:${resumeText} check: ${inputText} Jd: ${jd} ${{ temperature }} ${candidatePossition} ${finder} ${note}`);
-        const result = response.response.text();
-
-        function formatText(text) {
-            // Replace **text** with <strong>text</strong>
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        const pdfReaders = req.files;
+        const jd = req.body.jd;
         
-            // Replace \n with <br>
-            formattedText = formattedText.replace(/\n/g, '<br>');
+        const pdfReadersArray = Array.isArray(pdfReaders.resume) ? pdfReaders.resume : [pdfReaders.resume];
         
-            return formattedText;
-        }
-        const formattedText = formatText(result);
+        const maxResumes = 10;
+        const resumesToProcess = pdfReadersArray.slice(0, maxResumes);
 
-        // let cleanedJsonString = result.replace(/```json/g, '').replace(/```/g, '').trim();
-        // cleanedJsonString =  JSON.parse(cleanedJsonString)
-        return formattedText;
+        const processingPromises = resumesToProcess.map(async (pdfReader) => {
+
+            let jsonData = await fileToJson(pdfReader.data, pdfReader.mimetype);
+            let resumeText = jsonData.text;
+
+            let inputText = "";
+
+            if (req.body.actionType === "submit_score") {
+                inputText = `
+                Evaluate the following resume text and job description. Use the STAR method to guide your assessment and provide a final summary, including a numerical score and a descriptive review. The final response should address both the reasons for selecting and rejecting candidates.
+
+                Resume Text: ${resumeText}
+
+                Job Description: ${jd}
+
+                Key Points for Evaluation:
+
+                Reasons for Selecting Candidates:
+
+                Relevant Experience and Clear Role Progression: Assess if the resume shows relevant experience with a clear progression of responsibilities.
+                Quantifiable Achievements: Determine if the resume highlights specific, measurable achievements that reflect the candidate's impact.
+                Technical Expertise and Versatility: Check if the resume lists relevant technical skills and demonstrates adaptability across various roles or industries.
+                Leadership and Team Collaboration: Look for evidence of leadership and effective teamwork.
+                Alignment with Industry Standards and Continuous Improvement: Evaluate if the resume shows adherence to industry standards and a commitment to ongoing learning.
+                Reasons for Rejecting Candidates:
+
+                Lack of Relevant Experience: Identify any misalignment between the candidate's experience and the job requirements.
+                Vague Descriptions and Unquantified Achievements: Note if the resume has vague descriptions or lacks specific, quantifiable outcomes.
+                Inconsistent Formatting and Poor Structure: Check for any poor formatting or disorganization.
+                No Demonstrated Leadership or Team Experience: Look for a lack of evidence for leadership or teamwork.
+                Lack of Adaptability and Versatility: Assess if the resume shows limited experience across different roles or industries.
+                Final Response:
+
+                Based on the evaluation of the resume against the job description, provide a numerical score from 1 to 5 and a descriptive review:
+
+                Score: Provide a score from 1 to 5:
+
+                1 = Poor
+                2 = Fair
+                3 = Good
+                4 = Very Good
+                5 = Excellent
+                Review: Summarize the candidate's overall suitability for the position based on the key criteria. Include strengths and weaknesses and offer a brief explanation for the score.
+
+                Example Response:
+
+                Score: 3/5 (Good)
+                Review: The candidate demonstrates solid relevant experience with a clear role progression and some measurable achievements. However, the resume lacks consistency in formatting and does not provide sufficient examples of leadership or adaptability across various roles. Overall, the candidate is a good fit but has areas for improvement.
+                Always return name in Resume Evaluation
+
+                Note:
+                *Always include the name in the resume evaluation. 
+                *Review always be visible.
+                *Conclusion always be visible.
+                *Reasons for Selecting Candidates should be in Strengths section and Reasons for Rejecting Candidates should be in weaknesses section.      
+                *The response should be in simple language.
+                *Please provide your response using numeric bullet points. Ensure each sentence is clear and correctly structured.
+                `;
+
+                const response = await modal.generateContent(inputText);
+                const result = response.response.text();
+
+                function formatText(text) {
+                    text = text.replace(/\*\* (Score: \d+\/\d+ \((.*?)\)) \*\*/g, '<h2>$1</h2>');
+                    let formattedText = text.replace(/\*\*(.*?)\*\*/g, `<strong class="heading">$1</strong>`);
+                    formattedText = formattedText.replace(/^## (.*)$/gm, '<h2 class="highlighted">$1</h2>');
+                    formattedText = formattedText.replace(/(\d+\.)/g, '<strong class="heading">$1</strong>');
+
+                    formattedText = formattedText.replace(/\n\n/g, '<br><br>');
+                    formattedText = formattedText.replace(/\n/g, '<br><br>');
+
+                    return formattedText;
+                }
+                const formattedText = formatText(result);
+
+                return {
+                    name: pdfReader.name,
+                    result: formattedText
+                };
+            }
+        });
+
+        // Wait for all promises to resolve
+        const results = await Promise.all(processingPromises);
+
+        return results;
 
     } catch (error) {
-        console.log(error)
-        return {}
+        console.log(error);
+        return [];
     }
 }
+
 
 /**
  * Get resume score by using gemini
@@ -84,6 +136,10 @@ const getResumeScoreAi = async (req, res) => {
             req.actionType != "submit_score"
         }
 
+        if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
+            return sendBadRequestError(res, `Please select at least one resume.`);
+        }
+
         const parsedData = await resumeRanker(req)
 
         return sendSuccessResponse(res, `Your score is ready...`, parsedData);
@@ -94,6 +150,9 @@ const getResumeScoreAi = async (req, res) => {
     }
 };
 
+
+
+
 /**
  * This function has been made for fetching JSON format of a resume
  * @param {*} req 
@@ -103,15 +162,6 @@ const resumeParser = async (req) => {
     try {
         const pdfReader = req.files;
         let jsonData = await fileToJson(pdfReader.resume.data, pdfReader.resume.mimetype);
-
-        // const whatHasToReturn = `I want only an object with only these given points in return like name, email, phone, education, yearsOfExperience, summary, skills, workExperience and the name should always be first letter capital and yearsOfExperience always should be nuber non decimal`
-
-        // const whatHasToReturn = `Return a JSON object with the following fields: name, email, phone, education, yearsOfExperience, summary, skills, and workExperience. Ensure the 'name' field starts with a capital letter, and 'yearsOfExperience' is a whole number (no decimals).
-        
-        // Note: Here we want the json response faster, So please generate fast response in less then 10 seconds.
-        // `
-
-        // const whatHasToReturn = `Extract and return only the following fields in JSON format: name, email, phone, education, yearsOfExperience, summary, skills, workExperience. Ensure 'name' starts with a capital letter and 'yearsOfExperience' is an integer.`
 
         const whatHasToReturn = `System Instructions 
 
