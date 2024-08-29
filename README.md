@@ -1,1 +1,0 @@
-# resumeranker.ai

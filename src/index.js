@@ -8,6 +8,8 @@ const fileUpload = require('express-fileupload');
 require('dotenv').config();
 
 const app = express();
+const cors = require('cors');
+app.use(cors('*'));
 
 connectDB();
 
@@ -20,5 +22,5 @@ app.use(express.static('public'));
 
 app.use('/api', apiRoutes);
 
-const PORT = process.env.PORT || 4200;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
