@@ -7,11 +7,6 @@ services:
     plan: free
     branches:
       - main
-    autoscale:
-      minInstances: 1
-      maxInstances: 3
     envVars:
       - key: NODE_ENV
         value: production
-    disk:
-      size: 1GB
