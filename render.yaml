@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: your-app-name
+    name: jobfit
     env: node
     buildCommand: npm install
     startCommand: npm start
