@@ -39,54 +39,53 @@ const resumeRanker = async (req) => {
             
             if (req.body.actionType === "submit_score") {
                 inputText = `
-                Evaluate the following resume text and job description. Use the STAR method to guide your assessment and provide a final summary, including a numerical score and a descriptive review. The final response should address both the reasons for selecting and rejecting candidates.
+                Evaluate the following resume text and job description. Provide a comprehensive analysis to determine if this is one of the best candidates for the position. The evaluation should be thorough and result in a clear score and recommendation.
                 
                 Resume Text: ${resumeText}
-
                 Job Description: ${jd}
                 
-                Key Points for Evaluation:
+                Evaluation Criteria:
                 
-                Reasons for Selecting Candidates:
-
-                Relevant Experience and Clear Role Progression: Assess if the resume shows relevant experience with a clear progression of responsibilities.
-                Quantifiable Achievements: Determine if the resume highlights specific, measurable achievements that reflect the candidate's impact.
-                Technical Expertise and Versatility: Check if the resume lists relevant technical skills and demonstrates adaptability across various roles or industries.
-                Leadership and Team Collaboration: Look for evidence of leadership and effective teamwork.
-                Alignment with Industry Standards and Continuous Improvement: Evaluate if the resume shows adherence to industry standards and a commitment to ongoing learning.
-                Reasons for Rejecting Candidates:
-
-                Lack of Relevant Experience: Identify any misalignment between the candidate's experience and the job requirements.
-                Vague Descriptions and Unquantified Achievements: Note if the resume has vague descriptions or lacks specific, quantifiable outcomes.
-                Inconsistent Formatting and Poor Structure: Check for any poor formatting or disorganization.
-                No Demonstrated Leadership or Team Experience: Look for a lack of evidence for leadership or teamwork.
-                Lack of Adaptability and Versatility: Assess if the resume shows limited experience across different roles or industries.
-                Final Response:
-
-                Based on the evaluation of the resume against the job description, provide a numerical score from 1 to 5 and a descriptive review:
+                1. Essential Qualifications:
+                - Required education and certifications
+                - Mandatory technical skills
+                - Minimum years of experience
+                
+                2. Skills Match Analysis:
+                - Technical skills alignment with job requirements
+                - Soft skills demonstration
+                - Industry-specific knowledge
+                
+                3. Experience Quality:
+                - Relevance to the position
+                - Achievement metrics and impact
+                - Project complexity and scope
+                
+                4. Leadership & Growth:
+                - Team management experience
+                - Project leadership
+                - Career progression
+                
+                Final Response Format:
                 
                 Score: Provide a score from 1 to 5:
-                
-                1 = Poor
-                2 = Fair
+                1 = Below Average
+                2 = Average
                 3 = Good
-                4 = Very Good
-                5 = Excellent
-                Review: Summarize the candidate's overall suitability for the position based on the key criteria. Include strengths and weaknesses and offer a brief explanation for the score.
+                4 = Excellent
+                5 = Outstanding (Perfect Match)
                 
-                Example Response:
+                Detailed Review:
+                - Strengths: List key strengths that make this candidate stand out
+                - Areas for Consideration: List any potential gaps or concerns
+                - Overall Fit: Explain why this candidate would or wouldn't be among the top choices
                 
-                Score: 3/5 (Good)
-                Review: The candidate demonstrates solid relevant experience with a clear role progression and some measurable achievements. However, the resume lacks consistency in formatting and does not provide sufficient examples of leadership or adaptability across various roles. Overall, the candidate is a good fit but has areas for improvement.
-                Always return name in Resume Evaluation
-                
-                Note:
-                *Always include the name in the resume evaluation. 
-                *Review always be visible.
-                *Conclusion always be visible.
-                *Reasons for Selecting Candidates should be in Strengths section and Reasons for Rejecting Candidates should be in weaknesses section.      
-                *The response should be in simple language.
-                *Please provide your response using numeric bullet points. Ensure each sentence is clear and correctly structured.
+                Important Notes:
+                * Always include the candidate's name in the evaluation
+                * Highlight any exceptional qualifications or unique skills
+                * Clearly indicate if this is one of the best candidates (Score 4-5)
+                * Use simple, clear language
+                * Structure the response with numeric bullet points
                 `;
                 
                 const response = await modal.generateContent(inputText);
